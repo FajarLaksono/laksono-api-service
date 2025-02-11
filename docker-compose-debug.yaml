@@ -1,0 +1,21 @@
+# Copyright (c) 2024 FajarLaksono. All Rights Reserved.
+
+version: '3'
+services:
+  service:
+    image: golang:1.21.5-alpine
+    container_name: $(SERVICE_TAG)
+    command: "dlv --listen=:40000 --headless=true --api-version=2 exec ./service"
+    working_dir: /srv
+    ports:
+      - "8080:8080"
+      - "40000:40000"
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - ALL
+    volumes:
+      - ${PWD:-./}:/srv
+    env_file:
+      - .env
+

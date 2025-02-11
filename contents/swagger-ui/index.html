@@ -1,0 +1,81 @@
+<!-- 
+Look out for "[CHANGEABLE]" and change it as needed.
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="./custom-assets/custom.css">
+    <link rel="icon" type="image/png" href="./custom-assets/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="./custom-assets/favicon-16x16.png" sizes="16x16" />
+
+    <!-- [CHANGEABLE] -->
+    <title>Laksono API Service</title>
+    <script type="module" crossorigin src="./assets/index-1e733164.js"></script>
+    <link rel="stylesheet" href="./assets/index-17f026eb.css">
+  </head>
+  <body>
+    <div id="header">
+      <div class="swagger-ui-wrap">
+        <a id="logo" href="https://fajarlaksono.github.io">Laksono API Service</a>
+      </div>
+    </div>
+
+    <div id="root"></div>
+    
+
+    <script>
+      window.onload = () => {
+        const AUTH_MAP_TO_STRING = {
+          userPermissions: 'Required permission: '
+        };
+        const removeTrailingSlash = (str) => str.endsWith('/') ? str.slice(0, -1) : str
+
+        const { origin, pathname } = window.location
+
+        // [CHANGEABLE]
+        // 
+        // `pathname` here is in the form of `/{servicePath}/apidocs/`.        // 
+        // If you don't need the "apidocs/", you might want to do this: pathname.replace("apidocs/", "").
+        const effectivePathName = removeTrailingSlash(pathname.replace("apidocs/", ""))
+        // [CHANGEABLE]
+        // 
+        // If you want the API spec name to be, say, "swagger.json" instead of "api.json":
+        // We can change "/api.json" to be "/swagger.json".
+        const apiSpecName = '/apidocs/api.json'
+
+        const pathToApiJson = effectivePathName + apiSpecName
+        const url = new URL(pathToApiJson, origin).href
+
+        renderSwaggerUi({
+          swaggerConfig: {
+            url,
+            deepLinking: true
+          },
+          oasSwaggerUiConfig: {
+            security: {
+              badgesField: 'x-security',
+              badgesDefaultValue: [{ label: 'Authentication required' }],
+              badgesProcessFn: (securityKey, security) => {
+                if (!security) return [];
+
+                const badges = [];
+                for (const key in security) {
+                  const val = security[key];
+                  badges.push({
+                    label: AUTH_MAP_TO_STRING[securityKey],
+                    value: val
+                  });
+                }
+
+                return badges;
+              }
+            }
+          }
+        });
+      };
+    </script>
+  </body>
+</html>

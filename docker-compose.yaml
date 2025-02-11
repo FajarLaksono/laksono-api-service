@@ -1,0 +1,59 @@
+# Copyright (c) 2024 FajarLaksono. All Rights Reserved.
+
+version: '3'
+services:
+  service:
+    image: ${SERVICE_TAG}:${REVISION_ID}
+    container_name: ${SERVICE_TAG}
+    ports:
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
+    volumes:
+      - ${PWD:-./}:/srv
+    env_file:
+      - .env
+    depends_on:
+      # - redis
+      - timescaledb
+    networks:
+      laksono_api_service:
+        ipv4_address: 172.32.1.1
+
+  worker:
+    image: ${SERVICE_TAG}-worker:${REVISION_ID}
+    container_name: ${SERVICE_TAG}-worker
+    volumes:
+      - ${PWD:-./}:/srv
+    env_file:
+      - .env
+    depends_on:
+      # - redis
+      - timescaledb
+    networks:
+      laksono_api_service:
+        ipv4_address: 172.32.1.2
+
+  # redis:
+  #   image: redis:7.2.3-alpine3.19
+  #   command: --requirepass redispass
+  #   ports:
+  #     - "6379:6379"
+
+  timescaledb:
+    image: timescale/timescaledb:2.1.0-pg12
+    container_name: laksono-api-service-database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=laksono
+      - POSTGRES_PASSWORD=laksono
+      - POSTGRES_DB=laksono
+    networks:
+      laksono_api_service:
+        ipv4_address: 172.32.1.3
+
+networks:
+  laksono_api_service:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.32.0.0/16
