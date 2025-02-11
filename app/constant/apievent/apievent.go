@@ -16,6 +16,12 @@ const (
 	CreateUserInsertingDBError       = 001001505
 	CreateUserInvalidWorkspace       = 001001406
 
+	CreateProjectsSuccess             = 001002200
+	CreateProjectsInvalidBody         = 001002401
+	CreateProjectsConflict            = 001002402
+	CreateProjectsInternalServerError = 001003501
+	CreateProjectsInsertingDBError    = 001004502
+
 	GetUsersSuccess             = 001002200
 	GetUsersDataNotFound        = 001002501
 	GetUsersInternalServerError = 001002502

@@ -11,13 +11,8 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 )
 
-type ErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 // AddUserManagementRoute endpoints group
-func AddUserManagementRoute(service *handler.APIService) {
+func AddUserManagementRouteGroup(service *handler.APIService) {
 	miscTags := []string{"User Management"}
 
 	service.WebService.Route(

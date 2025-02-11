@@ -18,5 +18,11 @@ func AddRoute(basePath string, service *handler.APIService) {
 		Doc("Laksono API Service").
 		ApiVersion("0.0.0.0")
 
-	AddUserManagementRoute(service)
+	AddUserManagementRouteGroup(service)
+	AddProteusDTRouteGroup(service)
+}
+
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }

@@ -22,6 +22,8 @@ type PostgresDAO interface {
 
 	CreateUser(ctx context.Context, data *model.User) (int64, error)
 	GetUsers(ctx context.Context) (*model.Users, error)
+
+	CreateProjects(ctx context.Context, data *model.Projects) (int64, error)
 }
 
 func InitPostgres(configuration *config.Config) (PostgresDAO, error) {
