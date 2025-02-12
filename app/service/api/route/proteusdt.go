@@ -34,11 +34,15 @@ func AddProteusDTRouteGroup(service *handler.APIService) {
 	service.WebService.Route(
 		service.WebService.GET(
 			fmt.Sprintf("/project")).
-			To(service.ListProjects).
-			Doc("List projects").
+			To(service.GetProjects).
+			Doc("Get and List projects").
 			Notes(
 				"<p>This endpoint lists projects.</p>").
-			Returns(http.StatusOK, http.StatusText(http.StatusOK), apiresponsemodel.GetProjectResponse{}).
+			Param(service.WebService.QueryParameter(constant.ProjectNameParameter, "Search "+constant.ProjectNameParameterString).DataType("string")).
+			Param(service.WebService.QueryParameter(constant.ProjectIsOverlappingParameter, constant.ProjectIsOverlappingParameterString).DataType("bool")).
+			Param(service.WebService.QueryParameter(constant.ProjectStartDateParameter, constant.ProjectStartDateParameterString).DataType("string")).
+			Param(service.WebService.QueryParameter(constant.ProjectEndDateParameter, constant.ProjectEndDateParameterString).DataType("string")).
+			Returns(http.StatusOK, http.StatusText(http.StatusOK), apiresponsemodel.GetProjectsResponse{}).
 			Returns(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), ErrorResponse{}).
 			Returns(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), ErrorResponse{}).
 			Metadata(restfulspec.KeyOpenAPITags, miscTags))
@@ -51,7 +55,7 @@ func AddProteusDTRouteGroup(service *handler.APIService) {
 			Notes(
 				"<p>This endpoint gets a project by ID.</p>").
 			Param(service.WebService.PathParameter(constant.ProjectIDParameter, constant.ProjectIDParameterString).DataType("string").Required(true)).
-			Returns(http.StatusOK, http.StatusText(http.StatusOK), apiresponsemodel.GetProjectsResponse{}).
+			Returns(http.StatusOK, http.StatusText(http.StatusOK), apiresponsemodel.GetProjectResponse{}).
 			Returns(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), ErrorResponse{}).
 			Returns(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), ErrorResponse{}).
 			Metadata(restfulspec.KeyOpenAPITags, miscTags))
@@ -59,13 +63,13 @@ func AddProteusDTRouteGroup(service *handler.APIService) {
 	// Update
 	service.WebService.Route(
 		service.WebService.PATCH(
-			fmt.Sprintf("/project/")).
+			fmt.Sprintf("/project")).
 			To(service.PatchProjectByIDBulk).
 			Doc("updates a project by IDs").
 			Notes(
 				"<p>This endpoint updates a project by ID.</p>").
 			Reads(apirequestmodel.UpdateProjectsRequest{}).
-			Returns(http.StatusAccepted, http.StatusText(http.StatusAccepted), apiresponsemodel.UpdatedProjectsResponse{}).
+			Returns(http.StatusAccepted, http.StatusText(http.StatusAccepted), apiresponsemodel.UpdatedProjectResponse{}).
 			Returns(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), ErrorResponse{}).
 			Returns(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), ErrorResponse{}).
 			Metadata(restfulspec.KeyOpenAPITags, miscTags))
@@ -73,13 +77,13 @@ func AddProteusDTRouteGroup(service *handler.APIService) {
 	// Delete
 	service.WebService.Route(
 		service.WebService.DELETE(
-			fmt.Sprintf("/project/{%s}", constant.ProjectIDParameter)).
+			fmt.Sprintf("/project")).
 			To(service.DeleteProjectByIDs).
-			Doc("Delete a project by ID").
+			Doc("Delete project by IDs").
 			Notes(
-				"<p>This endpoint deletes a project by ID.</p>").
-			Param(service.WebService.PathParameter(constant.ProjectIDParameter, constant.ProjectIDParameterString).DataType("string").Required(true)).
-			Returns(http.StatusNoContent, http.StatusText(http.StatusNoContent), nil).
+				"<p>This endpoint deletes projects by IDs.</p>").
+			Reads(apirequestmodel.DeleteProjectsByIDs{}).
+			Returns(http.StatusNoContent, http.StatusText(http.StatusOK), apiresponsemodel.DeletedProjectResponse{}).
 			Returns(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), ErrorResponse{}).
 			Returns(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), ErrorResponse{}).
 			Metadata(restfulspec.KeyOpenAPITags, miscTags))

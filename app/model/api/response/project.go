@@ -12,8 +12,8 @@ import (
 type CreateProjectResponse struct {
 	ID            uuid.UUID `json:"id"`
 	Name          string    `json:"name"`
-	StartDate     time.Time `json:"start_date"`
-	EndDate       time.Time `json:"end_date"`
+	StartDate     string    `json:"start_date"`
+	EndDate       string    `json:"end_date"`
 	IsOverlapping bool      `json:"is_overlapping"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
@@ -23,12 +23,11 @@ func ConvertToCreateProjectResponseFromProject(
 	data *modelpostgres.Project) *CreateProjectResponse {
 	var result *CreateProjectResponse
 
-	generatedUUID := uuid.New()
 	result = &CreateProjectResponse{
-		ID:        generatedUUID,
+		ID:        data.ID,
 		Name:      data.Name,
-		StartDate: data.StartDate,
-		EndDate:   data.EndDate,
+		StartDate: data.StartDate.Format("2006-01-02"),
+		EndDate:   data.EndDate.Format("2006-01-02"),
 		CreatedAt: data.CreatedAt,
 		UpdatedAt: data.UpdatedAt,
 	}
@@ -41,15 +40,14 @@ type CreateProjectsResponse []CreateProjectResponse
 func ConvertToCreateProjectsResponseFromProjects(data *modelpostgres.Projects) *CreateProjectsResponse {
 	var result CreateProjectsResponse
 
-	for _, projectRequest := range *data {
-		generatedUUID := uuid.New()
+	for _, row := range *data {
 		project := CreateProjectResponse{
-			ID:        generatedUUID,
-			Name:      projectRequest.Name,
-			StartDate: projectRequest.StartDate,
-			EndDate:   projectRequest.EndDate,
-			CreatedAt: projectRequest.CreatedAt,
-			UpdatedAt: projectRequest.UpdatedAt,
+			ID:        row.ID,
+			Name:      row.Name,
+			StartDate: row.StartDate.Format("2006-01-02"),
+			EndDate:   row.EndDate.Format("2006-01-02"),
+			CreatedAt: row.CreatedAt,
+			UpdatedAt: row.UpdatedAt,
 		}
 		result = append(result, project)
 	}
@@ -60,8 +58,8 @@ func ConvertToCreateProjectsResponseFromProjects(data *modelpostgres.Projects) *
 type GetProjectResponse struct {
 	ID            uuid.UUID `json:"id"`
 	Name          string    `json:"name"`
-	StartDate     time.Time `json:"start_date"`
-	EndDate       time.Time `json:"end_date"`
+	StartDate     string    `json:"start_date"`
+	EndDate       string    `json:"end_date"`
 	IsOverlapping bool      `json:"is_overlapping"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
@@ -71,84 +69,47 @@ func ConvertToGetProjectResponseFromProject(
 	data *modelpostgres.Project) *GetProjectResponse {
 	var result *GetProjectResponse
 
-	generatedUUID := uuid.New()
 	result = &GetProjectResponse{
-		ID:        generatedUUID,
+		ID:        data.ID,
 		Name:      data.Name,
-		StartDate: data.StartDate,
-		EndDate:   data.EndDate,
+		StartDate: data.StartDate.Format("2006-01-02"),
+		EndDate:   data.EndDate.Format("2006-01-02"),
 		CreatedAt: data.CreatedAt,
-		UpdatedAt: data.UpdatedAt,
+		UpdatedAt: data.UpdatedAt, // "created_at": "2025-02-12T07:21:04.232215Z", "updated_at": "2025-02-12T07:21:04.232215Z"
 	}
 
 	return result
 }
 
-type GetProjectsResponse []GetProjectResponse
+type GetProjectsResponse struct {
+	Total int64                `json:"total"`
+	Data  []GetProjectResponse `json:"data"`
+}
 
-func ConvertToGetProjectsResponseFromProjects(data *modelpostgres.Projects) *GetProjectsResponse {
+func ConvertToGetProjectsResponseFromProjects(total int64, data *modelpostgres.Projects) *GetProjectsResponse {
 	var result GetProjectsResponse
 
-	for _, projectRequest := range *data {
-		generatedUUID := uuid.New()
+	for _, row := range *data {
 		project := GetProjectResponse{
-			ID:        generatedUUID,
-			Name:      projectRequest.Name,
-			StartDate: projectRequest.StartDate,
-			EndDate:   projectRequest.EndDate,
-			CreatedAt: projectRequest.CreatedAt,
-			UpdatedAt: projectRequest.UpdatedAt,
+			ID:        row.ID,
+			Name:      row.Name,
+			StartDate: row.StartDate.Format("2006-01-02"),
+			EndDate:   row.EndDate.Format("2006-01-02"),
+			CreatedAt: row.CreatedAt,
+			UpdatedAt: row.UpdatedAt,
 		}
-		result = append(result, project)
+		result.Data = append(result.Data, project)
 	}
+
+	result.Total = total
 
 	return &result
 }
 
 type UpdatedProjectResponse struct {
-	ID            uuid.UUID `json:"id"`
-	Name          string    `json:"name"`
-	StartDate     time.Time `json:"start_date"`
-	EndDate       time.Time `json:"end_date"`
-	IsOverlapping bool      `json:"is_overlapping"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	TotalRowUpdated int64 `json:"total_row_updated"`
 }
 
-func ConvertToUpdatedProjectResponseFromProject(
-	data *modelpostgres.Project) *UpdatedProjectResponse {
-	var result *UpdatedProjectResponse
-
-	generatedUUID := uuid.New()
-	result = &UpdatedProjectResponse{
-		ID:        generatedUUID,
-		Name:      data.Name,
-		StartDate: data.StartDate,
-		EndDate:   data.EndDate,
-		CreatedAt: data.CreatedAt,
-		UpdatedAt: data.UpdatedAt,
-	}
-
-	return result
-}
-
-type UpdatedProjectsResponse []UpdatedProjectResponse
-
-func ConvertToUpdatedProjectsResponseFromProjects(data *modelpostgres.Projects) *UpdatedProjectsResponse {
-	var result UpdatedProjectsResponse
-
-	for _, projectRequest := range *data {
-		generatedUUID := uuid.New()
-		project := UpdatedProjectResponse{
-			ID:        generatedUUID,
-			Name:      projectRequest.Name,
-			StartDate: projectRequest.StartDate,
-			EndDate:   projectRequest.EndDate,
-			CreatedAt: projectRequest.CreatedAt,
-			UpdatedAt: projectRequest.UpdatedAt,
-		}
-		result = append(result, project)
-	}
-
-	return &result
+type DeletedProjectResponse struct {
+	TotalRowDeleted int64 `json:"total_row_deleted"`
 }

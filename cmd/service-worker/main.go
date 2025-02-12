@@ -121,7 +121,7 @@ func main() {
 	go func(wg *sync.WaitGroup, runHTTPServerFunc func()) {
 		defer wg.Done()
 
-		log.Info("running http server")
+		log.Info("running worker server")
 		runHTTPServerFunc()
 	}(&wg, runHTTPServerFunc)
 

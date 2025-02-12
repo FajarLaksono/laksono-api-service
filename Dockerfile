@@ -1,7 +1,7 @@
 # Copyright (c) 2024 FajarLaksono. All Rights Reserved.
 
 FROM golang:1.23.6-alpine
-LABEL maintainer = "fajrlaksono@gmail.com"
+LABEL maintainer="fajrlaksono@gmail.com"
 
 ENV HOME /srv
 

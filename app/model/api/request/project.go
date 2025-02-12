@@ -3,6 +3,8 @@
 package model
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"fajarlaksono.github.io/laksono-api-service/app/model"
@@ -11,41 +13,62 @@ import (
 )
 
 type CreateProjectRequest struct {
-	Name      string    `json:"name"`
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
+	Name      string `json:"name"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
 }
 
-func (data *CreateProjectRequest) ConvertToProject() *modelpostgres.Project {
+func (data *CreateProjectRequest) ConvertToProject() (*modelpostgres.Project, error) {
 	var result *modelpostgres.Project
+
+	startDate, err := time.Parse("2006-01-02", data.StartDate)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid start date format: %v", err))
+	}
+
+	endDate, err := time.Parse("2006-01-02", data.EndDate)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid start date format: %v", err))
+	}
 
 	generatedUUID := uuid.New()
 	result = &modelpostgres.Project{
 		ID:        generatedUUID,
 		Name:      data.Name,
-		StartDate: data.StartDate,
-		EndDate:   data.EndDate,
+		StartDate: startDate,
+		EndDate:   endDate,
 		DBBaseModel: model.DBBaseModel{
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
 	}
 
-	return result
+	return result, nil
 }
 
 type CreateProjectsRequest []CreateProjectRequest
 
-func (data *CreateProjectsRequest) ConvertToProject() *modelpostgres.Projects {
+func (data *CreateProjectsRequest) ConvertToProject() (*modelpostgres.Projects, error) {
 	var result modelpostgres.Projects
 
 	for _, projectRequest := range *data {
 		generatedUUID := uuid.New()
+
+		startDate, err := time.Parse("2006-01-02", projectRequest.StartDate)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("invalid start date format: %v", err))
+		}
+
+		endDate, err := time.Parse("2006-01-02", projectRequest.EndDate)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("invalid start date format: %v", err))
+		}
+
 		project := modelpostgres.Project{
 			ID:        generatedUUID,
 			Name:      projectRequest.Name,
-			StartDate: projectRequest.StartDate,
-			EndDate:   projectRequest.EndDate,
+			StartDate: startDate,
+			EndDate:   endDate,
 			DBBaseModel: model.DBBaseModel{
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
@@ -54,14 +77,18 @@ func (data *CreateProjectsRequest) ConvertToProject() *modelpostgres.Projects {
 		result = append(result, project)
 	}
 
-	return &result
+	return &result, nil
 }
 
 type UpdateProjectRequest struct {
-	ID        string     `json:"id"`
-	Name      *string    `json:"name"`
-	StartDate *time.Time `json:"start_date"`
-	EndDate   *time.Time `json:"end_date"`
+	ID        string  `json:"id"`
+	Name      *string `json:"name"`
+	StartDate *string `json:"start_date"`
+	EndDate   *string `json:"end_date"`
 }
 
 type UpdateProjectsRequest []UpdateProjectRequest
+
+type DeleteProjectsByIDs struct {
+	IDs []uuid.UUID
+}

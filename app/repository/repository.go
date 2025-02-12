@@ -4,9 +4,11 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"fajarlaksono.github.io/laksono-api-service/app/config"
 	postgresMigration "fajarlaksono.github.io/laksono-api-service/app/migration/postgres"
+	modelapirequest "fajarlaksono.github.io/laksono-api-service/app/model/api/request"
 	model "fajarlaksono.github.io/laksono-api-service/app/model/postgres"
 	"fajarlaksono.github.io/laksono-api-service/app/repository/postgres"
 	"github.com/pkg/errors"
@@ -24,6 +26,11 @@ type PostgresDAO interface {
 	GetUsers(ctx context.Context) (*model.Users, error)
 
 	CreateProjects(ctx context.Context, data *model.Projects) (int64, error)
+	GetProjects(ctx context.Context, projectNameFilter *string, isOverlappingFilter *bool,
+		startDateFilter, endDateFilter *time.Time) (int64, *model.Projects, error)
+	GetProjectByID(ctx context.Context, projectID string) (*model.Project, error)
+	PatchProjects(ctx context.Context, input modelapirequest.UpdateProjectsRequest) (int64, error)
+	DeleteProjects(ctx context.Context, input modelapirequest.DeleteProjectsByIDs) (int64, error)
 }
 
 func InitPostgres(configuration *config.Config) (PostgresDAO, error) {

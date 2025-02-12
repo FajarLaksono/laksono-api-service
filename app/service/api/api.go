@@ -77,11 +77,11 @@ func addSwagger(basePath string, serviceContainer *restful.Container,
 			s.Info = &spec.Info{
 				InfoProps: spec.InfoProps{
 					Title:       "Laksono API Service",
-					Description: "API for Laksono' practice",
+					Description: "API for Laksono' practice and playground",
 					Version:     "0.0.1",
 					Contact: &spec.ContactInfo{
 						ContactInfoProps: spec.ContactInfoProps{
-							Name:  "Fajar Laksono Playground",
+							Name:  "Fajar Laksono",
 							Email: "fajrlaksono@gmail.com",
 							URL:   "https://fajar.laksono.github.io",
 						},

@@ -12,4 +12,3 @@ type DBBaseModel struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `sql:"index" json:"deleted_at"`
 }
-

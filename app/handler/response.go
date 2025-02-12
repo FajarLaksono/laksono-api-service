@@ -41,6 +41,7 @@ func Write(request *restful.Request, response *restful.Response, httpStatusCode 
 	}
 
 	utils.Info(request, eventID, serviceType, levelInfo, fmt.Sprintf("%s, response: %+v", message, entity))
+	fmt.Printf("%+v\n", message)
 }
 
 // WriteError sends error message
