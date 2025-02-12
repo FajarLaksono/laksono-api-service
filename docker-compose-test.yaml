@@ -51,9 +51,6 @@ services:
       driver: json-file
     volumes:
       - ./log4j.properties:/opt/bitnami/kafka/config/log4j.properties
-    networks:
-      laksono_api_service:
-        ipv4_address: 172.32.1.4
 
   kafka:
     image: bitnami/kafka:3.6.2
@@ -74,9 +71,6 @@ services:
       driver: json-file
     volumes:
       - ./log4j.properties:/opt/bitnami/kafka/config/log4j.properties
-    networks:
-      laksono_api_service:
-        ipv4_address: 172.32.1.5
 
 networks:
   laksono_api_service:

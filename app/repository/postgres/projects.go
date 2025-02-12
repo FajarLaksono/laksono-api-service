@@ -175,9 +175,7 @@ func (db *PostgreClient) DeleteProjects(ctx context.Context, input modelapireque
 	result := tx.WithContext(ctx).
 		Table("projects").
 		Where("id IN ?", input.IDs).
-		Updates(map[string]interface{}{
-			"deleted_at": time.Now(),
-		})
+		Delete(nil)
 
 	if result.Error != nil {
 		tx.Rollback()

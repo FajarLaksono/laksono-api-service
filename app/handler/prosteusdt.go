@@ -330,6 +330,12 @@ func (service *APIService) DeleteProjectByIDs(req *restful.Request, resp *restfu
 		TotalRowDeleted: rowAffected,
 	}
 
+	kafkaMessage := modelkafka.ProjectMessage{
+		StartDate: "",
+		EndDate:   "",
+	}
+	go service.pushKafkaMessage(kafkaMessage)
+
 	Write(req, resp, http.StatusOK, apievent.ServiceNumber,
 		apievent.DeleteProjectsByIDsSuccess, "success deleting projects", responseData)
 }

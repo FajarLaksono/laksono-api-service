@@ -50,12 +50,12 @@ func PrintSplashInformation(serviceName, revisionID, buildDate, gitHash string) 
 // }
 
 func InitPostgres(cfg config.Config, serviceType string) (repository.PostgresDAO, error) {
-	conf := cfg
-	if serviceType == "worker" {
-		conf.PostgresIsInitMigrate = false
-	}
+	// conf := cfg
+	// if serviceType == "worker" {
+	// 	conf.PostgresIsInitMigrate = false
+	// }
 
-	postgresStorage, err := repository.InitPostgres(&conf)
+	postgresStorage, err := repository.InitPostgres(&cfg)
 
 	return postgresStorage, errors.Wrap(err, "unable to create new postgres connection")
 }

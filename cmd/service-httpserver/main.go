@@ -80,7 +80,7 @@ func main() {
 	// defer disconnectFunc()
 
 	// Initial delay to give Kafka broker more time to initialize
-	log.Info("Sleep for 60s to wait kafka ready (Homework to make to faster)")
+	log.Info("Sleep for 60s to wait kafka ready (Homework to make it faster)")
 	time.Sleep(60 * time.Second)
 	log.Info("Running again")
 
@@ -108,8 +108,6 @@ func main() {
 
 		kafkaWriter.Transport = &kafka.Transport{TLS: tlsConf}
 	}
-
-	utils.CreateKafkaTopic(conf.KafkaBrokerList, conf.KafkaTopicProjects)
 
 	// Start the server
 	service, err := api.NewService(conf, postgresClient, kafkaWriter)
