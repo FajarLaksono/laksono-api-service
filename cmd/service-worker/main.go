@@ -3,12 +3,8 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 
 	"fajarlaksono.github.io/laksono-api-service/app/config"
 	"fajarlaksono.github.io/laksono-api-service/cmd/utils"
@@ -62,7 +58,7 @@ func main() {
 	// }
 
 	// Postgres connection configuration
-	postgresClient, err := utils.InitPostgres(conf)
+	postgresClient, err := utils.InitPostgres(conf, "worker")
 	if err != nil {
 		log.WithError(err).Error("unable to initialize postgres")
 
@@ -77,53 +73,4 @@ func main() {
 	// 	return
 	// }
 
-	deps := &utils.DepsService{
-		// Redis:    redisClient,
-		Postgres: &postgresClient,
-		// Mongo:    mongoClient,
-	}
-
-	defer disconnectFunc()
-
-	// Start workers
-	workerCtx, workerCtxCancel := context.WithCancel(context.Background())
-	defer func() {
-		log.Info("cancel all workers...")
-		workerCtxCancel()
-		log.Info("all workers has been shut down")
-	}()
-
-	go utils.RunWorkers(workerCtx, conf, deps)
-
-	runHTTPServerFunc, stopHTTPServerFunc, err := utils.InitHTTPServer(conf.Port, conf.BasePath)
-	if err != nil {
-		log.WithError(err).Error("unable to initialize http server")
-
-		return
-	}
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-
-	wg := sync.WaitGroup{}
-
-	wg.Add(1)
-	go func(wg *sync.WaitGroup, stopHTTPServerFunc func()) {
-		defer wg.Done()
-
-		<-sig
-		log.Info("os quit signal received. stop all running process.")
-
-		stopHTTPServerFunc()
-	}(&wg, stopHTTPServerFunc)
-
-	wg.Add(1)
-	go func(wg *sync.WaitGroup, runHTTPServerFunc func()) {
-		defer wg.Done()
-
-		log.Info("running worker server")
-		runHTTPServerFunc()
-	}(&wg, runHTTPServerFunc)
-
-	wg.Wait()
 }

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,8 +12,12 @@ import (
 	constError "fajarlaksono.github.io/laksono-api-service/app/constant/error"
 	modelapirequest "fajarlaksono.github.io/laksono-api-service/app/model/api/request"
 	modelapiresponse "fajarlaksono.github.io/laksono-api-service/app/model/api/response"
+	modelkafka "fajarlaksono.github.io/laksono-api-service/app/model/kafka"
+	"github.com/cenkalti/backoff/v3"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
+	"github.com/sirupsen/logrus"
 )
 
 func (service *APIService) AddNewProjects(req *restful.Request, resp *restful.Response) {
@@ -72,6 +78,23 @@ func (service *APIService) AddNewProjects(req *restful.Request, resp *restful.Re
 	}
 
 	responseData := modelapiresponse.ConvertToCreateProjectsResponseFromProjects(insertData)
+
+	StartDate := time.Now()
+	EndDate := time.Now()
+	for _, data := range *insertData {
+		if StartDate.After(data.StartDate) {
+			StartDate = data.StartDate
+		}
+
+		if EndDate.After(data.EndDate) {
+			EndDate = data.EndDate
+		}
+	}
+	kafkaMessage := modelkafka.ProjectMessage{
+		StartDate: StartDate.Format("2006-01-02"),
+		EndDate:   EndDate.Format("2006-01-02"),
+	}
+	go service.pushKafkaMessage(kafkaMessage)
 
 	Write(req, resp, http.StatusCreated, apievent.ServiceNumber,
 		apievent.CreateProjectsSuccess, "success creating projects", responseData)
@@ -220,6 +243,29 @@ func (service *APIService) PatchProjectByIDBulk(req *restful.Request, resp *rest
 		TotalRowUpdated: rowAffected,
 	}
 
+	StartDate := time.Now()
+	EndDate := time.Now()
+	for _, data := range requestData {
+		if data.StartDate != nil {
+			input, _ := time.Parse("2006-01-02", *data.StartDate)
+			if StartDate.After(input) {
+				StartDate = input
+			}
+		}
+
+		if data.EndDate != nil {
+			input, _ := time.Parse("2006-01-02", *data.EndDate)
+			if EndDate.After(input) {
+				EndDate = input
+			}
+		}
+	}
+	kafkaMessage := modelkafka.ProjectMessage{
+		StartDate: StartDate.Format("2006-01-02"),
+		EndDate:   EndDate.Format("2006-01-02"),
+	}
+	go service.pushKafkaMessage(kafkaMessage)
+
 	Write(req, resp, http.StatusAccepted, apievent.ServiceNumber,
 		apievent.PatchingProjectsSuccess, "success patching projects", responseData)
 }
@@ -315,4 +361,30 @@ func (service *APIService) PatchEvaluateOverlapProjects(req *restful.Request, re
 
 	Write(req, resp, http.StatusNoContent, apievent.ServiceNumber,
 		apievent.PatchingProjectsSuccess, "success evaluating overlapping projects", nil)
+}
+
+func (service *APIService) pushKafkaMessage(data modelkafka.ProjectMessage) {
+	log := logrus.WithFields(logrus.Fields{
+		"start_Daate": data.StartDate,
+		"end_date":    data.EndDate,
+	})
+
+	message, err := json.Marshal(data)
+	if err != nil {
+		log.Errorf("unable to marshal data, err: %s", err.Error())
+
+		return
+	}
+
+	err = backoff.RetryNotify(func() error {
+		return service.KafkaWriter.WriteMessages(context.Background(), kafka.Message{Value: message})
+	}, backoff.NewExponentialBackOff(), func(e error, duration time.Duration) {
+		log.Warnf("Retry duration: %v sec, err: %s", duration.Seconds(), e.Error())
+	})
+	if err != nil {
+		log.Errorf("unable to send project data to kafka, err: %s", err.Error())
+
+		return
+	}
+	log.Info("successfully push project data to kafka")
 }

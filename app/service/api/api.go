@@ -14,12 +14,13 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
+	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 )
 
 //nolint:funlen
-func NewService(Config *config.Config, DAOPostgres repository.PostgresDAO) (*Service, error) {
-	apiservice := handler.New(DAOPostgres)
+func NewService(Config *config.Config, DAOPostgres repository.PostgresDAO, kafkaWriter *kafka.Writer) (*Service, error) {
+	apiservice := handler.New(DAOPostgres, kafkaWriter)
 	route.AddRoute(Config.BasePath, apiservice)
 
 	goRestfulContainer := restful.NewContainer()

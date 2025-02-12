@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"fajarlaksono.github.io/laksono-api-service/app/config"
 	"fajarlaksono.github.io/laksono-api-service/app/repository"
+	"github.com/cenkalti/backoff/v3"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,8 +49,13 @@ func PrintSplashInformation(serviceName, revisionID, buildDate, gitHash string) 
 // 	return redis.NewStorage(redisClient), redisClient, locker, nil
 // }
 
-func InitPostgres(cfg config.Config) (repository.PostgresDAO, error) {
-	postgresStorage, err := repository.InitPostgres(&cfg)
+func InitPostgres(cfg config.Config, serviceType string) (repository.PostgresDAO, error) {
+	conf := cfg
+	if serviceType == "worker" {
+		conf.PostgresIsInitMigrate = false
+	}
+
+	postgresStorage, err := repository.InitPostgres(&conf)
 
 	return postgresStorage, errors.Wrap(err, "unable to create new postgres connection")
 }
@@ -100,4 +108,64 @@ func RunWorkers(ctx context.Context, cfg config.Config, deps *DepsService) {
 	// runner := worker.Runner{}
 
 	// runner.Run(ctx)
+}
+
+func CreateKafkaTopic(brokerAddress []string, topic string) error {
+	var conn *kafka.Conn
+	var err error
+
+	operation := func() error {
+		log.Infof("Connecting to Kafka broker at %s", brokerAddress[0])
+		conn, err = kafka.Dial("tcp", brokerAddress[0])
+		if err != nil {
+			return errors.Wrap(err, "failed to dial Kafka")
+		}
+		defer conn.Close()
+
+		// Check if the topic exists
+		topics, err := conn.ReadPartitions()
+		if err != nil {
+			return errors.Wrap(err, "failed to read partitions")
+		}
+
+		topicExists := false
+		for _, p := range topics {
+			if p.Topic == topic {
+				topicExists = true
+				break
+			}
+		}
+
+		if topicExists {
+			fmt.Printf("Topic %s already exists\n", topic)
+		} else {
+			// Define the topic configuration
+			topicConfig := kafka.TopicConfig{
+				Topic:             topic,
+				NumPartitions:     1,
+				ReplicationFactor: 1,
+			}
+
+			// Create the topic
+			err = conn.CreateTopics(topicConfig)
+			if err != nil {
+				return errors.Wrap(err, "failed to create topic")
+			}
+
+			fmt.Printf("Topic %s created successfully\n", topic)
+		}
+
+		return nil
+	}
+
+	notify := func(err error, duration time.Duration) {
+		log.Warnf("Retrying in %v seconds due to error: %s", duration.Seconds(), err.Error())
+	}
+
+	err = backoff.RetryNotify(operation, backoff.NewExponentialBackOff(), notify)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Kafka topic after retries")
+	}
+
+	return nil
 }

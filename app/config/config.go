@@ -48,6 +48,11 @@ type Config struct {
 	// RedisPassword           string `env:"REDIS_PASSWORD" envDocs:"Redis password"`
 	// RedisConnectionPoolSize int    `env:"REDIS_CONNECTION_POOL_SIZE" envDefault:"20" envDocs:"Redis connection pool size"`
 	// RedisMinIdleConnection  int    `env:"REDIS_MIN_IDLE_CONNECTIONS" envDefault:"0" envDocs:"redis min idle connection"`
+
+	KafkaBrokerList    []string `env:"KAFKA_BROKER_LIST,required" envDocs:"Kafka endpoint"`
+	KafkaTopicProjects string   `env:"KAFKA_TOPIC_PROJECTS" envDocs:"Kafka Topic name for Projects" envDefault:"laksono-projects"`
+	KafkaEnableTLSConn bool     `env:"KAFKA_ENABLE_TLS_CONN" envDocs:"Enable TLS connection to Kafka Brokers" envDefault:"false"`
+	TLSCertificatePath string   `env:"TLS_CERTIFICATE_PATH" envDocs:"TLS certificate path in string. If empty, will fallback to default TLS crt file for alpine linux at /etc/ssl/certs/ca-certificates.crt." envDefault:"/etc/ssl/certs/ca-certificates.crt"`
 }
 
 func (envVar Config) HelpDocs() []string {
