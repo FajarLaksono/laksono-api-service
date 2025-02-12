@@ -287,3 +287,32 @@ func (service *APIService) DeleteProjectByIDs(req *restful.Request, resp *restfu
 	Write(req, resp, http.StatusOK, apievent.ServiceNumber,
 		apievent.DeleteProjectsByIDsSuccess, "success deleting projects", responseData)
 }
+
+func (service *APIService) PatchEvaluateOverlapProjects(req *restful.Request, resp *restful.Response) {
+	ctx := req.Request.Context()
+
+	_, err := service.DAOPostgres.EvaluateNonOverlapProjects(ctx)
+	if err != nil {
+		WriteError(req, resp, http.StatusInternalServerError, apievent.ServiceNumber, err, &Error{
+			ErrorCode:    apievent.PatchProjectsInternalServerError,
+			ErrorMessage: "internal server error " + err.Error(),
+			ErrorLogMsg:  "unable process request: internal server error",
+		})
+
+		return
+	}
+
+	_, err = service.DAOPostgres.EvaluateOverlapProjects(ctx)
+	if err != nil {
+		WriteError(req, resp, http.StatusInternalServerError, apievent.ServiceNumber, err, &Error{
+			ErrorCode:    apievent.PatchProjectsInternalServerError,
+			ErrorMessage: "internal server error " + err.Error(),
+			ErrorLogMsg:  "unable process request: internal server error",
+		})
+
+		return
+	}
+
+	Write(req, resp, http.StatusNoContent, apievent.ServiceNumber,
+		apievent.PatchingProjectsSuccess, "success evaluating overlapping projects", nil)
+}

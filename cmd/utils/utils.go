@@ -10,7 +10,6 @@ import (
 
 	"fajarlaksono.github.io/laksono-api-service/app/config"
 	"fajarlaksono.github.io/laksono-api-service/app/repository"
-	"fajarlaksono.github.io/laksono-api-service/app/service/worker"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/pkg/errors"
@@ -98,7 +97,7 @@ This endpoint is also used by k8s to check whether the service is ready or not.`
 }
 
 func RunWorkers(ctx context.Context, cfg config.Config, deps *DepsService) {
-	runner := worker.Runner{}
+	// runner := worker.Runner{}
 
-	runner.Run(ctx)
+	// runner.Run(ctx)
 }

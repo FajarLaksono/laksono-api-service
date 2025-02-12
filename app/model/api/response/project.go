@@ -70,12 +70,13 @@ func ConvertToGetProjectResponseFromProject(
 	var result *GetProjectResponse
 
 	result = &GetProjectResponse{
-		ID:        data.ID,
-		Name:      data.Name,
-		StartDate: data.StartDate.Format("2006-01-02"),
-		EndDate:   data.EndDate.Format("2006-01-02"),
-		CreatedAt: data.CreatedAt,
-		UpdatedAt: data.UpdatedAt, // "created_at": "2025-02-12T07:21:04.232215Z", "updated_at": "2025-02-12T07:21:04.232215Z"
+		ID:            data.ID,
+		Name:          data.Name,
+		StartDate:     data.StartDate.Format("2006-01-02"),
+		EndDate:       data.EndDate.Format("2006-01-02"),
+		CreatedAt:     data.CreatedAt,
+		UpdatedAt:     data.UpdatedAt, // "created_at": "2025-02-12T07:21:04.232215Z", "updated_at": "2025-02-12T07:21:04.232215Z"
+		IsOverlapping: data.IsOverlapping,
 	}
 
 	return result
@@ -91,12 +92,13 @@ func ConvertToGetProjectsResponseFromProjects(total int64, data *modelpostgres.P
 
 	for _, row := range *data {
 		project := GetProjectResponse{
-			ID:        row.ID,
-			Name:      row.Name,
-			StartDate: row.StartDate.Format("2006-01-02"),
-			EndDate:   row.EndDate.Format("2006-01-02"),
-			CreatedAt: row.CreatedAt,
-			UpdatedAt: row.UpdatedAt,
+			ID:            row.ID,
+			Name:          row.Name,
+			StartDate:     row.StartDate.Format("2006-01-02"),
+			EndDate:       row.EndDate.Format("2006-01-02"),
+			CreatedAt:     row.CreatedAt,
+			UpdatedAt:     row.UpdatedAt,
+			IsOverlapping: row.IsOverlapping,
 		}
 		result.Data = append(result.Data, project)
 	}

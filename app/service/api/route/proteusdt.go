@@ -13,6 +13,8 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 )
 
+type Empty struct{}
+
 func AddProteusDTRouteGroup(service *handler.APIService) {
 	miscTags := []string{"ProteusDT' Project Management"}
 
@@ -70,6 +72,20 @@ func AddProteusDTRouteGroup(service *handler.APIService) {
 				"<p>This endpoint updates a project by ID.</p>").
 			Reads(apirequestmodel.UpdateProjectsRequest{}).
 			Returns(http.StatusAccepted, http.StatusText(http.StatusAccepted), apiresponsemodel.UpdatedProjectResponse{}).
+			Returns(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), ErrorResponse{}).
+			Returns(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), ErrorResponse{}).
+			Metadata(restfulspec.KeyOpenAPITags, miscTags))
+
+	service.WebService.Route(
+		service.WebService.PATCH(
+			fmt.Sprintf("/project/evaluate")).
+			To(service.PatchEvaluateOverlapProjects).
+			Doc("updates data and detect overlap projects").
+			Notes(
+				"<p>This endpoint evaluates and updates overlap projects.</p>").
+			Reads(Empty{}, "Fill the body with `{}` if in the swagger."+
+				" The body can be empty outside the swagger").
+			Returns(http.StatusAccepted, http.StatusText(http.StatusNoContent), nil).
 			Returns(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), ErrorResponse{}).
 			Returns(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError), ErrorResponse{}).
 			Metadata(restfulspec.KeyOpenAPITags, miscTags))

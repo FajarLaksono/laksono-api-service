@@ -31,6 +31,8 @@ type PostgresDAO interface {
 	GetProjectByID(ctx context.Context, projectID string) (*model.Project, error)
 	PatchProjects(ctx context.Context, input modelapirequest.UpdateProjectsRequest) (int64, error)
 	DeleteProjects(ctx context.Context, input modelapirequest.DeleteProjectsByIDs) (int64, error)
+	EvaluateNonOverlapProjects(ctx context.Context) (int64, error)
+	EvaluateOverlapProjects(ctx context.Context) (int64, error)
 }
 
 func InitPostgres(configuration *config.Config) (PostgresDAO, error) {

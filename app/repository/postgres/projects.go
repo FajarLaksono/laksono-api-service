@@ -4,7 +4,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -61,6 +60,7 @@ func (db *PostgreClient) GetProjects(ctx context.Context, projectNameFilter *str
 			"p.name, " +
 			"p.start_date, " +
 			"p.end_date, " +
+			"p.is_overlapping, " +
 			"p.created_at, " +
 			"p.updated_at, " +
 			"p.deleted_at").
@@ -104,6 +104,7 @@ func (db *PostgreClient) GetProjectByID(ctx context.Context, projectID string) (
 			"p.name, " +
 			"p.start_date, " +
 			"p.end_date, " +
+			"p.is_overlapping, " +
 			"p.created_at, " +
 			"p.updated_at, " +
 			"p.deleted_at").
@@ -120,7 +121,6 @@ func (db *PostgreClient) PatchProjects(ctx context.Context, input modelapireques
 
 	var totalRowsAffected int64
 
-	fmt.Printf("\n Fajar 2.1 \n")
 	tx := db.Client.Begin()
 	if tx.Error != nil {
 		return 0, tx.Error
@@ -190,4 +190,74 @@ func (db *PostgreClient) DeleteProjects(ctx context.Context, input modelapireque
 	}
 
 	return result.RowsAffected, nil
+}
+
+func (db *PostgreClient) EvaluateNonOverlapProjects(ctx context.Context) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, consterror.DBTimeout)
+	defer cancel()
+
+	var totalRowsAffected int64
+
+	tx := db.Client.Begin()
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	result := tx.WithContext(ctx).Exec(`
+		UPDATE projects p1
+		SET is_overlapping = false
+		WHERE NOT EXISTS (
+			SELECT 1 FROM projects p2
+			WHERE p1.id != p2.id
+			AND ((p1.start_date BETWEEN p2.start_date AND p2.end_date)
+			OR (p1.end_date BETWEEN p2.start_date AND p2.end_date))
+		) AND p1.is_overlapping = true
+	`)
+
+	if result.Error != nil {
+		tx.Rollback()
+		return 0, result.Error
+	}
+
+	// Commit the transaction if no errors
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
+	}
+
+	return totalRowsAffected, nil
+}
+
+func (db *PostgreClient) EvaluateOverlapProjects(ctx context.Context) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, consterror.DBTimeout)
+	defer cancel()
+
+	var totalRowsAffected int64
+
+	tx := db.Client.Begin()
+	if tx.Error != nil {
+		return 0, tx.Error
+	}
+
+	result := tx.WithContext(ctx).Exec(`
+		UPDATE projects p1
+		SET is_overlapping = true
+		WHERE EXISTS (
+			SELECT 1 FROM projects p2
+			WHERE p1.id != p2.id
+			AND ((p1.start_date BETWEEN p2.start_date AND p2.end_date)
+			OR (p1.end_date BETWEEN p2.start_date AND p2.end_date))
+		) AND p1.is_overlapping = false
+	`)
+
+	if result.Error != nil {
+		tx.Rollback()
+		return 0, result.Error
+	}
+
+	// Commit the transaction if no errors
+	if err := tx.Commit().Error; err != nil {
+		return 0, err
+	}
+
+	return totalRowsAffected, nil
 }

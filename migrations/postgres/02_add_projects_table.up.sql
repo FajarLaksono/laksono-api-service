@@ -10,5 +10,9 @@ CREATE TABLE IF NOT EXISTS projects(
     is_overlapping BOOLEAN DEFAULT FALSE,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    PRIMARY KEY(id)
 );
+
+CREATE INDEX IF NOT EXISTS index_projects_start_date ON projects USING btree (start_date);
+CREATE INDEX IF NOT EXISTS index_projects_end_date ON projects USING btree (end_date);
