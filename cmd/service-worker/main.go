@@ -58,7 +58,7 @@ func main() {
 	// }
 
 	// Postgres connection configuration
-	postgresClient, err := utils.InitPostgres(conf, "worker")
+	_, err = utils.InitPostgres(conf, "worker")
 	if err != nil {
 		log.WithError(err).Error("unable to initialize postgres")
 
