@@ -72,6 +72,19 @@ services:
     volumes:
       - ./log4j.properties:/opt/bitnami/kafka/config/log4j.properties
 
+  websocket:
+    image: ${SERVICE_TAG}-websocket:${REVISION_ID}
+    container_name: ${SERVICE_TAG}-websocket
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${PWD:-./}:/srv
+    env_file:
+      - .env
+    networks:
+      laksono_api_service:
+        ipv4_address: 172.32.1.6
+
 networks:
   laksono_api_service:
     ipam:

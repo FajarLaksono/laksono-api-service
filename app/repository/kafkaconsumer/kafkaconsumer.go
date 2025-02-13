@@ -1,7 +1,7 @@
 package KafkaConsumer
 
 import (
-	"fajarlaksono.github.io/laksono-api-service/app/service/worker"
+	worker "fajarlaksono.github.io/laksono-api-service/app/service/workerservice"
 	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 )

@@ -30,9 +30,23 @@ services:
       - timescaledb
       - zookeeper
       - kafka
+      - websocket
     networks:
       laksono_api_service:
         ipv4_address: 172.32.1.2
+
+  websocket:
+    image: ${SERVICE_TAG}-websocket:${REVISION_ID}
+    container_name: ${SERVICE_TAG}-websocket
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${PWD:-./}:/srv
+    env_file:
+      - .env
+    networks:
+      laksono_api_service:
+        ipv4_address: 172.32.1.6
 
   # redis:
   #   image: redis:7.2.3-alpine3.19

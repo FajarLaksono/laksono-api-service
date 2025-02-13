@@ -175,6 +175,9 @@ func (db *PostgreClient) DeleteProjects(ctx context.Context, input modelapireque
 	result := tx.WithContext(ctx).
 		Table("projects").
 		Where("id IN ?", input.IDs).
+		// Updates(map[string]interface{}{
+		// 	"deleted_at": time.Now(),
+		// })
 		Delete(nil)
 
 	if result.Error != nil {
@@ -216,6 +219,7 @@ func (db *PostgreClient) EvaluateNonOverlapProjects(ctx context.Context) (int64,
 		tx.Rollback()
 		return 0, result.Error
 	}
+	totalRowsAffected = result.RowsAffected
 
 	// Commit the transaction if no errors
 	if err := tx.Commit().Error; err != nil {
@@ -251,6 +255,8 @@ func (db *PostgreClient) EvaluateOverlapProjects(ctx context.Context) (int64, er
 		tx.Rollback()
 		return 0, result.Error
 	}
+
+	totalRowsAffected = result.RowsAffected
 
 	// Commit the transaction if no errors
 	if err := tx.Commit().Error; err != nil {

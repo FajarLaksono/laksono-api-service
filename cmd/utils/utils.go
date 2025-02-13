@@ -11,6 +11,7 @@ import (
 
 	"fajarlaksono.github.io/laksono-api-service/app/config"
 	"fajarlaksono.github.io/laksono-api-service/app/repository"
+	"fajarlaksono.github.io/laksono-api-service/app/repository/websocketclient"
 	"github.com/cenkalti/backoff/v3"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -168,4 +169,32 @@ func CreateKafkaTopic(brokerAddress []string, topic string) error {
 	}
 
 	return nil
+}
+
+func InitWebsocketConnection() (*websocketclient.Client, func()) {
+	var client *websocketclient.Client
+	var err error
+
+	operation := func() error {
+		client, err = websocketclient.NewClient("ws://websocket:3000/ws")
+		if err != nil {
+			return fmt.Errorf("failed to connect to WebSocket server: %v", err)
+		}
+		return nil
+	}
+
+	notify := func(err error, duration time.Duration) {
+		log.Warnf("Retrying in %v seconds due to error: %s", duration.Seconds(), err.Error())
+	}
+
+	err = backoff.RetryNotify(operation, backoff.NewExponentialBackOff(), notify)
+	if err != nil {
+		log.Fatalf("Failed to create WebSocket client after retries: %v", err)
+	}
+
+	return client, func() {
+		if err := client.Close(); err != nil {
+			log.Errorf("Failed to close WebSocket client: %v", err)
+		}
+	}
 }

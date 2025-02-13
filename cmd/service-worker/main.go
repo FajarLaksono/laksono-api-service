@@ -12,7 +12,7 @@ import (
 	model "fajarlaksono.github.io/laksono-api-service/app/model/kafka"
 	kafkaconsumerService "fajarlaksono.github.io/laksono-api-service/app/repository/kafkaconsumer"
 	kafkaconsumer "fajarlaksono.github.io/laksono-api-service/app/repository/kafkaconsumer/kafka"
-	"fajarlaksono.github.io/laksono-api-service/app/service/worker"
+	worker "fajarlaksono.github.io/laksono-api-service/app/service/workerservice"
 	"fajarlaksono.github.io/laksono-api-service/cmd/utils"
 	"github.com/caarlos0/env"
 	"github.com/cenkalti/backoff/v4"
@@ -84,6 +84,10 @@ func main() {
 	// 	return
 	// }
 
+	wsclient, wsclose := utils.InitWebsocketConnection()
+	log.Info("connected to web socket")
+	defer wsclose()
+
 	if err := utils.CreateKafkaTopic(conf.KafkaBrokerList, conf.KafkaTopicProjects); err != nil {
 		log.Errorf("unable to create Kafka topic (%s): %s", conf.KafkaTopicProjects, err)
 		return
@@ -142,7 +146,8 @@ func main() {
 			make(chan bool),
 			retryWriter,
 			recordRetryFinishChan,
-			postgresClient))
+			postgresClient,
+			wsclient))
 	}
 
 	reader := kafka.NewReader(kafka.ReaderConfig{

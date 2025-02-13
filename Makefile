@@ -34,9 +34,16 @@ build:
 		-ldflags "-s -X main.revisionID=$(REVISION_ID) -X main.buildDate=$(BUILD_DATE) -X main.gitHash=$(GIT_HASH)" \
 		./cmd/service-worker/...
 
+# building the websocket
+	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) \
+		go build -buildvcs=false -o websocket \
+		-ldflags "-s -X main.revisionID=$(REVISION_ID) -X main.buildDate=$(BUILD_DATE) -X main.gitHash=$(GIT_HASH)" \
+		./cmd/service-websocket/...
+
 # building docker images
 	docker build --tag="$(SERVICE_TAG):$(REVISION_ID)" --tag="$(SERVICE_TAG):latest" .
 	docker build --file=Dockerfile.worker --tag="$(SERVICE_TAG)-worker:$(REVISION_ID)" --tag="$(SERVICE_TAG)-worker:latest" .
+	docker build --file=Dockerfile.websocket --tag="$(SERVICE_TAG)-websocket:$(REVISION_ID)" --tag="$(SERVICE_TAG)-websocket:latest" .
 
 # Running
 run:
@@ -47,8 +54,11 @@ debug-start:
 	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) go build -buildvcs=false -o service \
 			-gcflags "all=-N -1" ./cmd/service-httpserver/...
 	
-	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) go build -buildvcs=false -o service \
+	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) go build -buildvcs=false -o worker \
 			-gcflags "all=-N -1" ./cmd/service-worker/...
+
+	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) go build -buildvcs=false -o websocket \
+			-gcflags "all=-N -1" ./cmd/service-websocket/...
 
 	docker-compose -f docker-compose-debug.yaml up
 
@@ -59,7 +69,7 @@ debug-stop:
 
 # Clean the builds 
 clean: 
-	-$(RUN) $(BUILDER_IMAGE) rm -rf vendor vendor.* *.log service service.sha256 worker worker.sha256 test.xml dependencies.txt
+	-$(RUN) $(BUILDER_IMAGE) rm -rf vendor vendor.* *.log service service.sha256 worker worker.sha256 test.xml dependencies.txt websocket
 	-$(RUN) $(BUILDER_IMAGE) go clean -i
 	-$(RUN) $(BUILDER_IMAGE) find . -type f -name 'coverage.xml' -delete
 	-docker rmi -f $(SERVICE_TAG):$(REVISION_ID) $(SERVICE_TAG):latest $(BUILDER_IMAGE)
@@ -88,6 +98,10 @@ rebuild:
 	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) go build -buildvcs=false -o worker \
 		-ldflags "-s -X main.revisionID=$(REVISION_ID) -X main.buildDate=$(BUILD_DATE) -X main.gitHash=$(GIT_HASH)" \
 		./cmd/service-worker/...
+
+	$(RUN) -e CGO_ENABLED=0 -e GOOS=linux $(BUILDER_IMAGE) go build -buildvcs=false -o websocket \
+		-ldflags "-s -X main.revisionID=$(REVISION_ID) -X main.buildDate=$(BUILD_DATE) -X main.gitHash=$(GIT_HASH)" \
+		./cmd/service-websocket/...
 
 	docker-compose --no-ansi up service
 
